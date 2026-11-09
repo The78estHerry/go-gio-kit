@@ -43,3 +43,4 @@
 
 - 2026-11-09：建立 repo 骨架（go.mod、LICENSE、.gitignore、CLAUDE.md 三語版本）。
 - 2026-11-09：圖示定案（積木 B3：GO＋輸入框＋小視窗＋密碼點＋速度線，`assets/icon.svg`，`assets/make-icon.ps1` 轉 PNG）。
+- 2026-11-09 18:08 當機（無 BugCheck，硬當機；Kernel-Power 41＋6008）：當時 go-credential-porter 的對話正在這裡跑 `go vet`／`go test -p 1 ./...` 與跨平台 vet，同時 icon-theme-park 在 cargo 編譯並啟動 Tauri 程式。當機前溫度 75°C、記憶體 46%，不是過熱或記憶體不足；開機後有多筆 LiveKernelEvent 141／117（顯示卡驅動程式逾時），顯示卡驅動是主要嫌疑。檢查結果：`gioform/`、`giowin/`、`go.mod`、`go.sum` 都完整（沒有截斷、gofmt 與 go vet 通過），仍未 commit。下次從：重跑 `go test -p 1 ./...`，確認後 commit gioform／giowin。
