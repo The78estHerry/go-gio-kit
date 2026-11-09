@@ -22,7 +22,7 @@ Gio に依存する再利用可能なパッケージ：`gioform`（TextField、S
 
 ## GitHub に関する決定
 
-- **GitHub に関する決定**（2026-11-09）：公開の GitHub を主な開発場所とし（`github.com/The78estHerry/go-gio-kit`）、Gitea はプルミラーにする。ミラー上ではコミットしない。
+- **GitHub に関する決定**（2026-11-09）：公開の GitHub を主な開発場所とし（`github.com/The78estHerry/go-gio-kit`）、Gitea（`The78estWorld/go-gio-kit`）にも置いて両方にプッシュする。remote は `origin` が Gitea、`github` が GitHub。ブランチとタグは両方にプッシュし、リリースも両方で作成する（手順は `RELEASING.md`）。
 - 準備済み：MIT LICENSE（The78ester）、`.gitignore`。
 - テストとサンプルに本物の資格情報、アカウント、内部 URL を入れない（`example.com`、`your-name`、`test-token-not-real` を使う）。
 

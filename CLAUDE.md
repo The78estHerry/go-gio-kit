@@ -22,7 +22,7 @@
 
 ## GitHub 決定
 
-- **GitHub 決定**（2026-11-09）：GitHub 公開為主要開發位置（`github.com/The78estHerry/go-gio-kit`），Gitea 用拉取鏡像，不在鏡像上提交。
+- **GitHub 決定**（2026-11-09）：GitHub 公開為主要開發位置（`github.com/The78estHerry/go-gio-kit`）；Gitea（`The78estWorld/go-gio-kit`）也保留一份，兩邊都推：remote `origin` 是 Gitea、`github` 是 GitHub，分支與 tag 兩邊都推，Release 兩邊都建（步驟見 `RELEASING.md`）。
 - 已準備：MIT LICENSE（The78ester）、`.gitignore`。
 - 測試與範例不放真實憑證、帳號或內部網址（用 `example.com`、`your-name`、`test-token-not-real`）。
 

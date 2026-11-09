@@ -22,7 +22,7 @@ The first user is go-credential-porter; go-virtual-display will switch to these 
 
 ## GitHub decision
 
-- **GitHub decision** (2026-11-09): GitHub (public) is the primary development location (`github.com/The78estHerry/go-gio-kit`); Gitea is a pull mirror, and nothing is committed on the mirror.
+- **GitHub decision** (2026-11-09): GitHub (public) is the primary development location (`github.com/The78estHerry/go-gio-kit`); a copy is also kept on Gitea (`The78estWorld/go-gio-kit`) and every push goes to both: remote `origin` is Gitea and `github` is GitHub; push branches and tags to both and create releases on both (steps in `RELEASING.md`).
 - Prepared: MIT LICENSE (The78ester), `.gitignore`.
 - No real credentials, accounts or internal URLs in tests and examples (use `example.com`, `your-name`, `test-token-not-real`).
 
