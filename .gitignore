@@ -1,0 +1,7 @@
+# Local multi-module workspace (never committed)
+go.work
+go.work.sum
+
+# Secrets and build output
+.env
+dist/
