@@ -42,3 +42,4 @@ The first user is go-credential-porter; go-virtual-display will switch to these 
 ## Progress log
 
 - 2026-11-09: Created the repository skeleton (go.mod, LICENSE, .gitignore, CLAUDE.md in three languages).
+- 2026-11-09: Icon finalized (blocks B3: GO + input box + small window + password dots + speed lines, `assets/icon.svg`, rendered by `assets/make-icon.ps1`).

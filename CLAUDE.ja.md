@@ -42,3 +42,4 @@ Gio に依存する再利用可能なパッケージ：`gioform`（TextField、S
 ## 進捗記録
 
 - 2026-11-09：リポジトリの骨組みを作成（go.mod、LICENSE、.gitignore、3 言語版の CLAUDE.md）。
+- 2026-11-09：アイコン決定（積み木 B3：GO・入力欄・小さなウィンドウ・パスワードの点・スピード線、`assets/icon.svg`、`assets/make-icon.ps1` で PNG に変換）。

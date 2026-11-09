@@ -42,3 +42,4 @@
 ## 進度紀錄
 
 - 2026-11-09：建立 repo 骨架（go.mod、LICENSE、.gitignore、CLAUDE.md 三語版本）。
+- 2026-11-09：圖示定案（積木 B3：GO＋輸入框＋小視窗＋密碼點＋速度線，`assets/icon.svg`，`assets/make-icon.ps1` 轉 PNG）。

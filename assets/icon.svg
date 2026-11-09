@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>go-gio-kit</title>
+  <defs>
+    <g id="g-go">
+      <path d="M30.2 26.8 A13 13 0 1 0 34 36 H24" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="51" cy="36" r="13" fill="none" stroke="#FFFFFF" stroke-width="8"/>
+    </g>
+    <g id="g-input">
+      <rect x="10" y="25" width="52" height="22" rx="4" fill="#FFFFFF"/>
+    </g>
+    <g id="g-window-dark">
+      <rect x="14" y="16" width="44" height="40" rx="5" fill="none" stroke="#3B2140" stroke-width="5"/>
+      <line x1="14" y1="28" x2="58" y2="28" stroke="#3B2140" stroke-width="5"/>
+    </g>
+    <g id="g-dots">
+      <rect x="10" y="25" width="52" height="22" rx="4" fill="#FFFFFF"/>
+    </g>
+    <g id="g-speed3">
+      <line x1="32" y1="72" x2="50" y2="72" stroke="#00ADD8" stroke-width="7" stroke-linecap="round"/>
+      <line x1="18" y1="90" x2="50" y2="90" stroke="#00ADD8" stroke-width="7" stroke-linecap="round"/>
+      <line x1="36" y1="108" x2="50" y2="108" stroke="#00ADD8" stroke-width="7" stroke-linecap="round"/>
+    </g>
+  </defs>
+      <rect width="256" height="256" rx="56" fill="#3B2140"/>
+      <use href="#g-speed3"/>
+      <g transform="translate(60 54)">
+        <rect width="72" height="72" rx="12" fill="#00ADD8"/>
+        <use href="#g-go"/>
+      </g>
+      <g transform="translate(140 54)">
+        <rect width="72" height="72" rx="12" fill="#E8684A"/>
+        <use href="#g-input"/>
+        <line x1="19" y1="30" x2="19" y2="42" stroke="#E8684A" stroke-width="4" stroke-linecap="round"/>
+      </g>
+      <g transform="translate(60 134)">
+        <rect width="72" height="72" rx="12" fill="#F2C14E"/>
+        <use href="#g-window-dark"/>
+      </g>
+      <g transform="translate(140 134)">
+        <rect width="72" height="72" rx="12" fill="#2BB3A3"/>
+        <use href="#g-dots"/>
+        <circle cx="22" cy="36" r="4" fill="#2BB3A3"/>
+        <circle cx="36" cy="36" r="4" fill="#2BB3A3"/>
+        <circle cx="50" cy="36" r="4" fill="#2BB3A3"/>
+      </g>
+</svg>
