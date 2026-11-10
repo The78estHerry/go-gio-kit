@@ -1,0 +1,24 @@
+name: CI
+
+# Gitea reads this file instead of .github/workflows. The NAS has only a
+# Linux runner, so this runs the Linux part of the GitHub workflow.
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      # gioform/example needs CGO and X11/Wayland packages on Linux; check
+      # only the library packages.
+      - name: Test library packages
+        run: |
+          PKGS=$(go list ./... | grep -v /example$)
+          go build $PKGS
+          go vet $PKGS
+          go test $PKGS

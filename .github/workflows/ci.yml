@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      # gioform/example imports gioui.org/app, which needs CGO and the
+      # X11/Wayland development packages on Linux. Linux checks only the
+      # library packages so the job does not depend on apt downloads.
+      - name: Select packages
+        run: |
+          if [ "$RUNNER_OS" = Linux ]; then
+            echo "PKGS=$(go list ./... | grep -v /example$ | xargs)" >> "$GITHUB_ENV"
+          else
+            echo "PKGS=./..." >> "$GITHUB_ENV"
+          fi
+      - run: go build $PKGS
+      - run: go vet $PKGS
+      - run: go test $PKGS
