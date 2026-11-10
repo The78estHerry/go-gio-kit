@@ -40,6 +40,7 @@ type Labels struct {
 	Confirm          string // label prefix of the NewSecret confirmation field
 	Required         string
 	Mismatch         string
+	Match            string // shown while the NewSecret confirmation matches
 	Weak, Fair, Good string // NewSecret strength hints
 }
 
@@ -47,8 +48,9 @@ type Labels struct {
 var DefaultLabels = Labels{
 	Submit: "OK", Cancel: "Cancel", Show: "Show", Confirm: "Confirm",
 	Required: "Required", Mismatch: "The two entries do not match",
-	Weak: "Weak: use 4 or more unrelated words, or 12+ characters",
-	Fair: "Fair", Good: "Strong",
+	Match: "The two entries match",
+	Weak:  "Weak: use 4 or more unrelated words, or 12+ characters",
+	Fair:  "Fair", Good: "Strong",
 }
 
 // Values are the submitted contents of a form.

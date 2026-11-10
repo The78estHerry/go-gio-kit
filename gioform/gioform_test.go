@@ -131,3 +131,21 @@ func TestValidateAndSubmit(t *testing.T) {
 		}
 	}
 }
+
+func TestConfirmState(t *testing.T) {
+	for _, c := range []struct {
+		secret, confirm string
+		want            int
+	}{
+		{"correct horse", "", confirmPending},
+		{"correct horse", "corr", confirmPending},
+		{"correct horse", "correct horse", confirmMatch},
+		{"correct horse", "correct house", confirmMismatch},
+		{"correct horse", "correct horse!", confirmMismatch},
+		{"", "x", confirmMismatch},
+	} {
+		if got := confirmState(c.secret, c.confirm); got != c.want {
+			t.Errorf("confirmState(%q, %q) = %d, want %d", c.secret, c.confirm, got, c.want)
+		}
+	}
+}

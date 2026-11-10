@@ -3,6 +3,7 @@ package gioform
 import (
 	"image"
 	"image/color"
+	"strings"
 
 	"gioui.org/io/key"
 	"gioui.org/layout"
@@ -275,12 +276,23 @@ func (f *Form) layoutField(gtx layout.Context, fs *fieldState) layout.Dimensions
 	if fs.err != "" {
 		msg, c = fs.err, th.Palette.Error
 	}
-	if msg != "" {
+	caption := func(msg string, c color.NRGBA) {
 		rows = append(rows, layout.Rigid(small.Layout), layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			l := material.Caption(th.Material, msg)
 			l.Color = c
 			return l.Layout(gtx)
 		}))
+	}
+	if msg != "" {
+		caption(msg, c)
+	}
+	if fs.Type == NewSecret && fs.err == "" {
+		switch confirmState(fs.ed.Text(), fs.confirm.Text()) {
+		case confirmMismatch:
+			caption(f.Labels.Mismatch, th.Palette.Error)
+		case confirmMatch:
+			caption(f.Labels.Match, th.Palette.Muted)
+		}
 	}
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx, rows...)
 }
@@ -352,4 +364,25 @@ func (f *Form) layoutButtons(gtx layout.Context) layout.Dimensions {
 		layout.Rigid(layout.Spacer{Width: th.Spacing}.Layout),
 		layout.Rigid(material.Button(th.Material, &f.submitBtn, f.Labels.Submit).Layout),
 	)
+}
+
+const (
+	confirmPending = iota
+	confirmMatch
+	confirmMismatch
+)
+
+// confirmState compares a new secret with its confirmation while the user
+// types. A confirmation that is still a prefix of the secret is pending, so
+// the mismatch warning does not flash on every keystroke.
+func confirmState(secret, confirm string) int {
+	switch {
+	case confirm == "":
+		return confirmPending
+	case confirm == secret:
+		return confirmMatch
+	case strings.HasPrefix(secret, confirm):
+		return confirmPending
+	}
+	return confirmMismatch
 }
