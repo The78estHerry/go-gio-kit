@@ -40,6 +40,9 @@ func run(w *app.Window) error {
 	gw.SetDarkTitleBar(mode.Dark(systemDark))
 
 	form := gioform.New(th, []gioform.Field{
+		{Key: "service", Label: "Service", Type: gioform.Choice, Required: true, Default: "gitea",
+			Choices: []gioform.Option{{Value: "github", Label: "GitHub"}, {Value: "gitea", Label: "Gitea"}},
+			Help:    "Choice field: the Server field is only needed for Gitea"},
 		{Key: "host", Label: "Server", Placeholder: "git.example.com", Required: true,
 			Help: "Host name only, without https://", Validate: gioform.Host("")},
 		{Key: "user", Label: "User name", Placeholder: "your-name", Required: true},
@@ -72,8 +75,8 @@ func run(w *app.Window) error {
 				gw.SetDarkTitleBar(mode.Dark(systemDark))
 			}
 			if v, ok := form.Submitted(); ok {
-				status = fmt.Sprintf("Submitted: server=%s user=%s token=%d bytes export=%d bytes. The form was reset.",
-					v.Text("host"), v.Text("user"), v.Secret("token").Len(), v.Secret("export").Len())
+				status = fmt.Sprintf("Submitted: service=%s server=%s user=%s token=%d bytes export=%d bytes. The form was reset.",
+					v.Text("service"), v.Text("host"), v.Text("user"), v.Secret("token").Len(), v.Secret("export").Len())
 				v.Wipe()
 				form.Reset()
 			}

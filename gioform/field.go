@@ -14,7 +14,15 @@ const (
 	// NewSecret is a Secret with a second confirmation field and a strength
 	// hint, for setting a new password. Any Unicode text is accepted.
 	NewSecret
+	// Choice picks one of Field.Choices with radio buttons. Its value is
+	// the chosen Option.Value; Field.Default selects one at the start.
+	Choice
 )
+
+// Option is one option of a Choice field.
+type Option struct {
+	Value, Label string
+}
 
 // Field describes one input of a form.
 type Field struct {
@@ -30,6 +38,9 @@ type Field struct {
 	Trim bool
 	// Validate is an optional extra check; its error is shown under the field.
 	Validate func(string) error
+	// Choices and Default are used by Choice fields.
+	Choices []Option
+	Default string
 }
 
 // Labels holds every word the forms show. DefaultLabels is English;

@@ -21,10 +21,29 @@ type fieldState struct {
 	ed      widget.Editor
 	confirm widget.Editor // NewSecret only
 	reveal  widget.Clickable
+	choice  widget.Enum // Choice only
 	err     string
 }
 
 func (fs *fieldState) secret() bool { return fs.Type == Secret || fs.Type == NewSecret }
+
+// value is the field's current text, or the chosen value of a Choice.
+func (fs *fieldState) value() string {
+	if fs.Type == Choice {
+		return fs.choice.Value
+	}
+	return fs.ed.Text()
+}
+
+// hasChoice reports whether v is one of the field's choices.
+func (fs *fieldState) hasChoice(v string) bool {
+	for _, c := range fs.Choices {
+		if c.Value == v {
+			return true
+		}
+	}
+	return false
+}
 
 // Form lays out a list of fields with OK and Cancel buttons.
 //
@@ -58,6 +77,7 @@ func New(th *Theme, fields []Field) *Form {
 			fs.ed.Mask = maskRune
 			fs.confirm.Mask = maskRune
 		}
+		fs.choice.Value = fd.Default
 		f.fields = append(f.fields, fs)
 	}
 	return f
@@ -72,12 +92,28 @@ func (f *Form) field(key string) *fieldState {
 	return nil
 }
 
-// SetText fills a text field, for example with saved settings. It does
-// nothing for secret fields.
+// SetText fills a text field, for example with saved settings, or selects
+// a Choice by value. It does nothing for secret fields.
 func (f *Form) SetText(key, value string) {
-	if fs := f.field(key); fs != nil && !fs.secret() {
+	fs := f.field(key)
+	switch {
+	case fs == nil || fs.secret():
+	case fs.Type == Choice:
+		if fs.hasChoice(value) {
+			fs.choice.Value = value
+		}
+	default:
 		fs.ed.SetText(value)
 	}
+}
+
+// Choice returns the value currently chosen in a Choice field, so the
+// application can adapt the rest of the form while the user picks.
+func (f *Form) Choice(key string) string {
+	if fs := f.field(key); fs != nil && fs.Type == Choice {
+		return fs.choice.Value
+	}
+	return ""
 }
 
 // SetError shows msg under a field, for example when the service rejected
@@ -112,6 +148,7 @@ func (f *Form) Reset() {
 	for _, fs := range f.fields {
 		fs.ed.SetText("")
 		fs.confirm.SetText("")
+		fs.choice.Value = fs.Default
 		fs.err = ""
 	}
 	f.values.Wipe()
@@ -126,7 +163,7 @@ func (f *Form) BlockedCopies() int { return f.blockedCopies }
 func (f *Form) validate() bool {
 	ok := true
 	for _, fs := range f.fields {
-		v := fs.ed.Text()
+		v := fs.value()
 		fs.err = ""
 		switch {
 		case fs.Required && v == "":
@@ -154,7 +191,7 @@ func (f *Form) trySubmit() {
 		if fs.secret() {
 			v.secret[fs.Key] = &SecretValue{b: []byte(fs.ed.Text())}
 		} else {
-			v.text[fs.Key] = fs.ed.Text()
+			v.text[fs.Key] = fs.value()
 		}
 	}
 	f.values, f.submitted = v, true
@@ -220,6 +257,12 @@ func (f *Form) Layout(gtx layout.Context) layout.Dimensions {
 		f.canceled = true
 	}
 	for _, fs := range f.fields {
+		if fs.Type == Choice {
+			if fs.choice.Update(gtx) {
+				fs.err = ""
+			}
+			continue
+		}
 		if f.update(gtx, fs, &fs.ed) {
 			submit = true
 		}
@@ -252,12 +295,16 @@ func (f *Form) layoutField(gtx layout.Context, fs *fieldState) layout.Dimensions
 		return l.Layout
 	}
 	small := layout.Spacer{Height: unit.Dp(4)}
+	input := func(gtx layout.Context) layout.Dimensions {
+		return f.layoutBox(gtx, fs, &fs.ed, fs.Placeholder)
+	}
+	if fs.Type == Choice {
+		input = func(gtx layout.Context) layout.Dimensions { return f.layoutChoices(gtx, fs) }
+	}
 	rows := []layout.FlexChild{
 		layout.Rigid(label(fs.Label, th.Palette.Fg)),
 		layout.Rigid(small.Layout),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return f.layoutBox(gtx, fs, &fs.ed, fs.Placeholder)
-		}),
+		layout.Rigid(input),
 	}
 	if fs.Type == NewSecret {
 		rows = append(rows,
@@ -385,4 +432,18 @@ func confirmState(secret, confirm string) int {
 		return confirmPending
 	}
 	return confirmMismatch
+}
+
+// layoutChoices draws a Choice field as a row of radio buttons.
+func (f *Form) layoutChoices(gtx layout.Context, fs *fieldState) layout.Dimensions {
+	th := f.Theme
+	var items []layout.FlexChild
+	for _, c := range fs.Choices {
+		items = append(items, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			r := material.RadioButton(th.Material, &fs.choice, c.Value, c.Label)
+			r.Color, r.IconColor = th.Palette.Fg, th.Palette.Accent
+			return layout.Inset{Right: unit.Dp(12)}.Layout(gtx, r.Layout)
+		}))
+	}
+	return layout.Flex{Alignment: layout.Middle}.Layout(gtx, items...)
 }

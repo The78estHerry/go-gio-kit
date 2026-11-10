@@ -19,7 +19,11 @@
 //	}
 package giowin
 
-import "gioui.org/io/event"
+import (
+	"gioui.org/io/event"
+
+	"github.com/The78estHerry/go-desktop-kit/desktop/userauth"
+)
 
 // Window holds the native handle of one Gio window.
 type Window struct {
@@ -48,3 +52,9 @@ func (w *Window) SetDarkTitleBar(dark bool) {
 func SystemPrefersDark() (dark, ok bool) {
 	return systemPrefersDark()
 }
+
+// AuthWindow returns the window for desktop/userauth prompts, so the
+// Windows Hello dialog appears in front of this window. Before the native
+// window exists, and on platforms where the OS places the prompt itself,
+// it is the zero Window, which lets the OS choose.
+func (w *Window) AuthWindow() userauth.Window { return userauth.NativeWindow(w.handle) }

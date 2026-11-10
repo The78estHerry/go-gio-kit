@@ -149,3 +149,36 @@ func TestConfirmState(t *testing.T) {
 		}
 	}
 }
+
+func TestChoice(t *testing.T) {
+	f := New(NewTheme(false), []Field{
+		{Key: "plugin", Label: "Service", Type: Choice, Required: true, Default: "github",
+			Choices: []Option{{"github", "GitHub"}, {"gitea", "Gitea"}}},
+		{Key: "kind", Label: "Kind", Type: Choice, Required: true,
+			Choices: []Option{{"a", "A"}, {"b", "B"}}},
+	})
+	if got := f.Choice("plugin"); got != "github" {
+		t.Errorf("default choice = %q", got)
+	}
+	f.SetText("plugin", "gitea")
+	f.SetText("plugin", "unknown") // not a choice: ignored
+	if got := f.Choice("plugin"); got != "gitea" {
+		t.Errorf("after SetText = %q", got)
+	}
+	if f.validate() {
+		t.Fatal("a required choice without a default was accepted")
+	}
+	f.SetText("kind", "b")
+	f.trySubmit()
+	v, ok := f.Submitted()
+	if !ok || v.Text("plugin") != "gitea" || v.Text("kind") != "b" {
+		t.Fatalf("submitted %v %q %q", ok, v.Text("plugin"), v.Text("kind"))
+	}
+	f.Reset()
+	if f.Choice("plugin") != "github" || f.Choice("kind") != "" {
+		t.Errorf("Reset did not restore defaults: %q %q", f.Choice("plugin"), f.Choice("kind"))
+	}
+	if f.Choice("missing") != "" {
+		t.Error("Choice of an unknown key")
+	}
+}
