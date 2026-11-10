@@ -48,3 +48,4 @@
 - 2026-11-10：**gioform 實機測試通過**（使用者操作範例）：Secret 欄位可貼上、擋住複製／剪下、按住 Show 才顯示；注音與日文羅馬拼音（chi、tsu、kya、kitte）正常；必填與驗證、Enter／Esc、深淺色與標題列切換、中日文顯示都正常。依使用者回饋：NewSecret 的確認欄改成打字時即時比對（還沒打完不報錯，不一樣立刻紅字，一致顯示 match；新增 `Labels.Match`）。下一步：三語 README，之後第一次推上 GitHub 並發佈 v0.1.0（要使用者同意）。
 - 2026-11-10：三語 README、`.github/FUNDING.yml`、`RELEASING.md`、CI（GitHub：Windows、macOS 編譯全部，Linux 只檢查 `gioform`、`giowin`；`.gitea/workflows` 只跑 Linux，避免 Windows／macOS 工作在 NAS 上一直排隊）。下一步：使用者同意後第一次推上 GitHub（repo 已建好），打 `v0.1.0` tag、兩邊建 Release。
 - 2026-11-10（暫停點）：main 與 `v0.1.0` tag 已推上 GitHub（`github` remote 已加入）與 Gitea。**下次從這裡接續**：確認 `v0.1.0` 的 CI（GitHub 三平台、Gitea Linux），通過後照 `RELEASING.md` 第 6、7 步兩邊建 Release 並確認 module proxy；失敗則修正後發 `v0.1.1`（已推送的 tag 不可移動）。
+- 2026-11-10：**v0.1.0 已發佈**：GitHub 三平台與 Gitea CI 通過，兩邊都有 Release，module proxy 可取得。下一步：M4 的 giowidget（從 go-virtual-display 抽出）。
