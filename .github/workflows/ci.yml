@@ -19,13 +19,13 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      # gioform/example imports gioui.org/app, which needs CGO and the
+      # gioui.org/app (used by giowidget and the examples) needs CGO and the
       # X11/Wayland development packages on Linux. Linux checks only the
-      # library packages so the job does not depend on apt downloads.
+      # packages without it so the job does not depend on apt downloads.
       - name: Select packages
         run: |
           if [ "$RUNNER_OS" = Linux ]; then
-            echo "PKGS=$(go list ./... | grep -v /example$ | xargs)" >> "$GITHUB_ENV"
+            echo "PKGS=$(go list ./... | grep -v -e /example$ -e /giowidget$ | xargs)" >> "$GITHUB_ENV"
           else
             echo "PKGS=./..." >> "$GITHUB_ENV"
           fi

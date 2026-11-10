@@ -14,11 +14,11 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      # gioform/example needs CGO and X11/Wayland packages on Linux; check
-      # only the library packages.
+      # gioui.org/app (giowidget, the examples) needs CGO and X11/Wayland
+      # packages on Linux; check only the packages without it.
       - name: Test library packages
         run: |
-          PKGS=$(go list ./... | grep -v /example$)
+          PKGS=$(go list ./... | grep -v -e /example$ -e /giowidget$)
           go build $PKGS
           go vet $PKGS
           go test $PKGS

@@ -26,10 +26,13 @@ delete a tag that has been pushed: the Go module proxy caches it forever.
    GOOS=darwin go vet ./gioform/ ./giowin/
    ```
 
-   `gioform/example` imports `gioui.org/app`, which needs CGO on Linux and
-   macOS, so it cannot be cross-checked from Windows; CI builds it on macOS.
+   `giowidget` and the examples import `gioui.org/app`, which needs CGO on
+   Linux and macOS, so they cannot be cross-checked from Windows; CI builds
+   them on macOS.
    Also run the example on real hardware and try the secret fields and the
-   IME (see the comment at the top of `gioform/example/main.go`).
+   IME (see the comment at the top of `gioform/example/main.go`), and run
+   `giowidget/example` (drag, on top, to cursor, remembered position, and
+   unplugging a second monitor).
 
 3. Update the package status column in `README.md`, `README.en.md` and
    `README.ja.md` for packages added or changed in this release.

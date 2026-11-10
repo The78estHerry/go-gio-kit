@@ -50,3 +50,4 @@
 - 2026-11-10（暫停點）：main 與 `v0.1.0` tag 已推上 GitHub（`github` remote 已加入）與 Gitea。**下次從這裡接續**：確認 `v0.1.0` 的 CI（GitHub 三平台、Gitea Linux），通過後照 `RELEASING.md` 第 6、7 步兩邊建 Release 並確認 module proxy；失敗則修正後發 `v0.1.1`（已推送的 tag 不可移動）。
 - 2026-11-10：**v0.1.0 已發佈**：GitHub 三平台與 Gitea CI 通過，兩邊都有 Release，module proxy 可取得。下一步：M4 的 giowidget（從 go-virtual-display 抽出）。
 - 待辦：Gitea Actions 對 `8b2d4f9`、`8d2bc9d`（只改 CLAUDE.md）沒有建立工作，只有 `fe29bb3` 跑了（main 與 tag 各一次）；GitHub 都有跑。原因未查。
+- 2026-11-11：新增 `giowidget`（從 go-virtual-display 抽出並分層）：核心 `place.go`（預設右下角、`besideCursor`、`visibleEnough`、螢幕被拔掉時的 `placer`）只用 `image.Rectangle`，透過 `screen` 介面向平台要資料，單元測試用假的螢幕配置；Windows 實作（工具視窗樣式、Win11 圓角、`EnumDisplayMonitors` 共用一個 callback）；其他平台只有無邊框與最上層。`giowidget/example` 實機測試全部通過（使用者操作，含第二螢幕拔掉／接回、暫移中拖曳）。CI 的 Linux 部分改為也排除 `giowidget`（`gioui.org/app` 需要 CGO）。下一步：go-virtual-display 改用新套件，之後兩個 kit 發版。
