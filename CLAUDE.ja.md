@@ -43,3 +43,5 @@ Gio に依存する再利用可能なパッケージ：`gioform`（TextField、S
 
 - 2026-11-09：リポジトリの骨組みを作成（go.mod、LICENSE、.gitignore、3 言語版の CLAUDE.md）。
 - 2026-11-09：アイコン決定（積み木 B3：GO・入力欄・小さなウィンドウ・パスワードの点・スピード線、`assets/icon.svg`、`assets/make-icon.ps1` で PNG に変換）。
+- 2026-11-09 18:08：ハングアップ（Kernel-Power 41＋6008、BugCheck なし）。ここで `go vet`／`go test` を実行中、別プロジェクトで Tauri アプリをコンパイル中だった。熱やメモリ不足ではなく、ディスプレイドライバーのタイムアウト（LiveKernelEvent 141／117）が主な容疑。`gioform/`、`giowin/`、`go.mod`、`go.sum` は無事だったが未コミット。
+- 2026-11-10：クラッシュ後に `go vet`、`go test -p 1 ./...`（Windows）と Linux／macOS のクロス vet（`gioform`、`giowin` のみ。`gioform/example` は `gioui.org/app` を使い、Linux では CGO が必要）を再実行し、すべて成功。giowin はウィンドウ破棄（`WM_NCDESTROY`）時に subclass の記録を消すようにした。gioform／giowin をコミット。次：M3 の仕上げ（実機で example を実行、README、v0.1.0 リリース）。

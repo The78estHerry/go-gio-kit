@@ -43,3 +43,5 @@ The first user is go-credential-porter; go-virtual-display will switch to these 
 
 - 2026-11-09: Created the repository skeleton (go.mod, LICENSE, .gitignore, CLAUDE.md in three languages).
 - 2026-11-09: Icon finalized (blocks B3: GO + input box + small window + password dots + speed lines, `assets/icon.svg`, rendered by `assets/make-icon.ps1`).
+- 2026-11-09 18:08: hard crash (Kernel-Power 41 + 6008, no BugCheck) while `go vet`/`go test` ran here and another project compiled a Tauri app. Not heat or memory; display driver timeouts (LiveKernelEvent 141/117) are the main suspect. `gioform/`, `giowin/`, `go.mod`, `go.sum` were intact but uncommitted.
+- 2026-11-10: After the crash, re-ran `go vet`, `go test -p 1 ./...` (Windows) and cross-vet for Linux/macOS (only `gioform` and `giowin`; `gioform/example` imports `gioui.org/app`, which needs CGO on Linux), all passing. giowin now forgets the subclass entry on `WM_NCDESTROY`. Committed gioform/giowin. Next: finish M3 (run the example on real hardware, README, release v0.1.0).
