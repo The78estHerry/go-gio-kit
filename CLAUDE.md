@@ -49,3 +49,4 @@
 - 2026-11-10：三語 README、`.github/FUNDING.yml`、`RELEASING.md`、CI（GitHub：Windows、macOS 編譯全部，Linux 只檢查 `gioform`、`giowin`；`.gitea/workflows` 只跑 Linux，避免 Windows／macOS 工作在 NAS 上一直排隊）。下一步：使用者同意後第一次推上 GitHub（repo 已建好），打 `v0.1.0` tag、兩邊建 Release。
 - 2026-11-10（暫停點）：main 與 `v0.1.0` tag 已推上 GitHub（`github` remote 已加入）與 Gitea。**下次從這裡接續**：確認 `v0.1.0` 的 CI（GitHub 三平台、Gitea Linux），通過後照 `RELEASING.md` 第 6、7 步兩邊建 Release 並確認 module proxy；失敗則修正後發 `v0.1.1`（已推送的 tag 不可移動）。
 - 2026-11-10：**v0.1.0 已發佈**：GitHub 三平台與 Gitea CI 通過，兩邊都有 Release，module proxy 可取得。下一步：M4 的 giowidget（從 go-virtual-display 抽出）。
+- 待辦：Gitea Actions 對 `8b2d4f9`、`8d2bc9d`（只改 CLAUDE.md）沒有建立工作，只有 `fe29bb3` 跑了（main 與 tag 各一次）；GitHub 都有跑。原因未查。

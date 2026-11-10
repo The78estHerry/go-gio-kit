@@ -49,3 +49,4 @@ Gio に依存する再利用可能なパッケージ：`gioform`（TextField、S
 - 2026-11-10：3 言語の README、`.github/FUNDING.yml`、`RELEASING.md`、CI（GitHub：Windows と macOS は全体をビルド、Linux は `gioform`、`giowin` のみ。`.gitea/workflows` は Linux のみで、Windows／macOS のジョブが NAS で待ち続けないようにする）。次：ユーザーの同意を得て GitHub へ初回 push（リポジトリ作成済み）、`v0.1.0` タグ、両方でリリース作成。
 - 2026-11-10（中断点）：main と `v0.1.0` タグを GitHub（`github` remote 追加済み）と Gitea に push 済み。**次はここから**：`v0.1.0` の CI（GitHub 3 OS、Gitea Linux）を確認し、成功なら `RELEASING.md` の手順 6・7（両方でリリース、module proxy 確認）、失敗なら修正して `v0.1.1`（push 済みタグは動かさない）。
 - 2026-11-10：**v0.1.0 をリリース**：GitHub 3 OS と Gitea の CI 成功、両方にリリース、module proxy から取得可能。次は M4 の giowidget（go-virtual-display から切り出し）。
+- TODO：Gitea Actions は `8b2d4f9`、`8d2bc9d`（CLAUDE.md のみの変更）でジョブを作らず、`fe29bb3` だけ実行（main とタグで各 1 回）。GitHub はすべて実行。原因は未調査。
