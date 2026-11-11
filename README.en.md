@@ -18,7 +18,7 @@ Packages that do not depend on a GUI (OS credential store, encrypted files, conf
 
 | Package | Purpose | Status |
 |---|---|---|
-| `gioform` | Forms: plain text fields, Secret fields (tokens, passwords), NewSecret fields (setting a new password, with confirmation and strength hint), Choice fields (radio buttons; in development on main), validation, dark and light themes | v0.1.0 |
+| `gioform` | Forms: plain text fields, Secret fields (tokens, passwords), NewSecret fields (setting a new password, with confirmation and strength hint), Choice fields (radio buttons), Select fields (drop-down lists), Combo fields (drop-downs you can type in), Duration fields (times), adding and removing options (in development on main), validation, dark and light themes | v0.1.0 |
 | `giowin` | Window fixes: Japanese IME on Windows, dark title bar, reading the OS color scheme, the owner window for desktop/userauth prompts (`AuthWindow`; in development on main) | v0.1.0 |
 | `giowidget` | Desktop widget window: borderless, optionally on top, dragged by its background, kept out of the taskbar; remembers its position, jumps next to the pointer, moves to the primary monitor while its monitor is unplugged and back afterwards | v0.2.0 |
 
@@ -66,6 +66,13 @@ go run ./gioform/example
 ```
 
 The UI text is English by default; replace `form.Labels` (type `gioform.Labels`) to translate it.
+
+### Choice and time fields (in development on main)
+
+- **Select**: a drop-down list that scrolls when long. With the focus on the field, Up and Down change the choice; Enter or Space opens the list, and Esc only closes it without canceling the form.
+- **Combo**: a drop-down you can type in. Typing filters the options, Down opens the list, and text that is not in the list is accepted too.
+- **Duration**: `◀ 5 min ▶` steps through common values; click the value to type `90` (minutes), `10s`, `3m`, `2:30` or `1m30s`. `Min` and `Max` limit it with a message when exceeded; how to type a time is behind "?". `ParseDuration` and `FormatDuration` can be used on their own.
+- **Adding and removing options**: set `Field.Add` and `Field.Remove` to show the buttons. "+" in a Combo adds the typed text; in a Select it turns the field into a text box and Enter adds (with `AddExternal` the app handles it). `Option.Fixed` options can never be removed, and `Field.CanRemove` lets the app decide by its own rules; when removing is not allowed the whole button fades, and hovering it shows a warning icon with the reason (replace the icon in `Theme.Icons`). The developer chooses whether removing asks first (`ConfirmRemove`) and can be undone (`UndoRemove`). `Form.OptionsChanged` reports changes so the app can save them.
 
 ## Security design
 

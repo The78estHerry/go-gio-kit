@@ -7,9 +7,14 @@
 package gioform
 
 import (
+	"image"
 	"image/color"
 
+	"gioui.org/f32"
 	"gioui.org/font/gofont"
+	"gioui.org/layout"
+	"gioui.org/op/clip"
+	"gioui.org/op/paint"
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget/material"
@@ -46,6 +51,7 @@ type Palette struct {
 	Accent   color.NRGBA // focus ring, primary button
 	OnAccent color.NRGBA // text on Accent
 	Error    color.NRGBA // validation messages
+	Warning  color.NRGBA // warning icons
 }
 
 func rgb(c uint32) color.NRGBA {
@@ -57,10 +63,12 @@ var (
 	DarkPalette = Palette{
 		Bg: rgb(0x1e1f22), Surface: rgb(0x2b2d31), Fg: rgb(0xe6e6e6), Muted: rgb(0xa0a4ab),
 		Border: rgb(0x4a4d55), Accent: rgb(0x4c8bf5), OnAccent: rgb(0xffffff), Error: rgb(0xf28b82),
+		Warning: rgb(0xfdd663),
 	}
 	LightPalette = Palette{
 		Bg: rgb(0xffffff), Surface: rgb(0xf4f5f7), Fg: rgb(0x1e1f22), Muted: rgb(0x5f6368),
 		Border: rgb(0xc4c7cc), Accent: rgb(0x3367d6), OnAccent: rgb(0xffffff), Error: rgb(0xc5221f),
+		Warning: rgb(0xf9ab00),
 	}
 )
 
@@ -70,13 +78,46 @@ type Theme struct {
 	Palette  Palette
 	Radius   unit.Dp
 	Spacing  unit.Dp
+	Icons    Icons
+}
+
+// Icon draws an icon of the given size in color c. Replace the icons in
+// Theme.Icons to change how forms look.
+type Icon func(gtx layout.Context, size unit.Dp, c color.NRGBA) layout.Dimensions
+
+// Icons are the icons forms draw.
+type Icons struct {
+	// Warning marks why something cannot be done, such as an option that
+	// cannot be removed. It is drawn in Palette.Warning.
+	Warning Icon
+}
+
+// WarningIcon is the default warning icon: a triangle with "!".
+func WarningIcon(gtx layout.Context, size unit.Dp, c color.NRGBA) layout.Dimensions {
+	s := float32(gtx.Dp(size))
+	var p clip.Path
+	p.Begin(gtx.Ops)
+	p.MoveTo(f32.Pt(s/2, s*0.06))
+	p.LineTo(f32.Pt(s*0.98, s*0.92))
+	p.LineTo(f32.Pt(s*0.02, s*0.92))
+	p.Close()
+	paint.FillShape(gtx.Ops, c, clip.Outline{Path: p.End()}.Op())
+	mark := color.NRGBA{R: 0x20, G: 0x21, B: 0x24, A: 0xff}
+	bar := func(y0, y1 float32) {
+		r := image.Rect(int(s*0.45), int(s*y0), int(s*0.55+0.999), int(s*y1))
+		paint.FillShape(gtx.Ops, mark, clip.Rect(r).Op())
+	}
+	bar(0.36, 0.66)
+	bar(0.73, 0.83)
+	n := int(s)
+	return layout.Dimensions{Size: image.Pt(n, n)}
 }
 
 // NewTheme returns a theme for a dark or light UI. Its text shaper loads the
 // system fonts, so any character a user types (Chinese, Japanese, ...) can
 // be shown.
 func NewTheme(dark bool) *Theme {
-	t := &Theme{Material: material.NewTheme(), Radius: 6, Spacing: 12}
+	t := &Theme{Material: material.NewTheme(), Radius: 6, Spacing: 12, Icons: Icons{Warning: WarningIcon}}
 	t.Material.Shaper = text.NewShaper(text.WithCollection(gofont.Collection()))
 	t.SetDark(dark)
 	return t

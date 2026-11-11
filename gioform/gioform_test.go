@@ -153,9 +153,9 @@ func TestConfirmState(t *testing.T) {
 func TestChoice(t *testing.T) {
 	f := New(NewTheme(false), []Field{
 		{Key: "plugin", Label: "Service", Type: Choice, Required: true, Default: "github",
-			Choices: []Option{{"github", "GitHub"}, {"gitea", "Gitea"}}},
+			Choices: []Option{{Value: "github", Label: "GitHub"}, {Value: "gitea", Label: "Gitea"}}},
 		{Key: "kind", Label: "Kind", Type: Choice, Required: true,
-			Choices: []Option{{"a", "A"}, {"b", "B"}}},
+			Choices: []Option{{Value: "a", Label: "A"}, {Value: "b", Label: "B"}}},
 	})
 	if got := f.Choice("plugin"); got != "github" {
 		t.Errorf("default choice = %q", got)

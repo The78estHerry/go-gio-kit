@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"gioui.org/app"
 	"gioui.org/layout"
@@ -23,7 +24,7 @@ import (
 func main() {
 	go func() {
 		w := new(app.Window)
-		w.Option(app.Title("gioform example"), app.Size(unit.Dp(520), unit.Dp(720)))
+		w.Option(app.Title("gioform example"), app.Size(unit.Dp(560), unit.Dp(860)))
 		if err := run(w); err != nil {
 			log.Fatal(err)
 		}
@@ -40,14 +41,39 @@ func run(w *app.Window) error {
 	gw.SetDarkTitleBar(mode.Dark(systemDark))
 
 	form := gioform.New(th, []gioform.Field{
-		{Key: "service", Label: "Service", Type: gioform.Choice, Required: true, Default: "gitea",
-			Choices: []gioform.Option{{Value: "github", Label: "GitHub"}, {Value: "gitea", Label: "Gitea"}},
-			Help:    "Choice field: the Server field is only needed for Gitea"},
-		{Key: "host", Label: "Server", Placeholder: "git.example.com", Required: true,
-			Help: "Host name only, without https://", Validate: gioform.Host("")},
+		{Key: "service", Label: "Service", Type: gioform.Select, Required: true,
+			Add: "+ Add", Remove: "− Remove", ConfirmRemove: true,
+			Choices: []gioform.Option{
+				{Value: "github", Label: "GitHub", Fixed: true}, {Value: "gitea", Label: "Gitea", Fixed: true},
+				{Value: "gitlab", Label: "GitLab"}, {Value: "forgejo", Label: "Forgejo"},
+				{Value: "bitbucket", Label: "Bitbucket"}, {Value: "codeberg", Label: "Codeberg"},
+				{Value: "azure", Label: "Azure DevOps"}, {Value: "sourcehut", Label: "SourceHut"},
+				{Value: "gogs", Label: "Gogs"}, {Value: "onedev", Label: "OneDev"},
+			},
+			Help: "Select: Up/Down, Enter/Space, Esc. + Add types a new one; GitHub and Gitea are built in; Remove asks first"},
+		{Key: "protocol", Label: "Protocol", Type: gioform.Choice, Default: "https",
+			Choices: []gioform.Option{{Value: "https", Label: "HTTPS"}, {Value: "ssh", Label: "SSH"}}},
+		{Key: "host", Label: "Server", Type: gioform.Combo, Placeholder: "git.example.com", Required: true,
+			Add: "+", Remove: "−", UndoRemove: true,
+			CanRemove: func(o gioform.Option) (bool, string) {
+				if o.Value == "code.example.com" {
+					return false, "A saved token uses this server. Remove that token first."
+				}
+				return true, ""
+			},
+			Choices: []gioform.Option{
+				{Value: "git.example.com", Label: "git.example.com"},
+				{Value: "code.example.com", Label: "code.example.com"},
+				{Value: "gitea.example.org", Label: "gitea.example.org"},
+			},
+			Help: "Combo: type to filter; + adds the typed host, − removes it (code.example.com is in use)", Validate: gioform.Host("")},
 		{Key: "user", Label: "User name", Placeholder: "your-name", Required: true},
 		{Key: "token", Label: "Token", Type: gioform.Secret, Required: true, Trim: true,
 			Help: "Paste works; copy and cut are blocked. Hold Show to see it."},
+		{Key: "clear", Label: "Clear the clipboard after", Type: gioform.Duration, Default: "30s",
+			Min: 5 * time.Second, Max: 10 * time.Minute,
+			Help: "Duration field: arrows (or Left/Right), click the time to type it, hover ? for help"},
+		{Key: "lock", Label: "Lock after idle", Type: gioform.Duration, Default: "15m", Max: 24 * time.Hour},
 		{Key: "export", Label: "Export password", Type: gioform.NewSecret,
 			Help: "Any text, Chinese sentences too"},
 		{Key: "note", Label: "Note (IME test)", Placeholder: "注音、日本語 chi / kitte"},
@@ -75,14 +101,19 @@ func run(w *app.Window) error {
 				gw.SetDarkTitleBar(mode.Dark(systemDark))
 			}
 			if v, ok := form.Submitted(); ok {
-				status = fmt.Sprintf("Submitted: service=%s server=%s user=%s token=%d bytes export=%d bytes. The form was reset.",
-					v.Text("service"), v.Text("host"), v.Text("user"), v.Secret("token").Len(), v.Secret("export").Len())
+				status = fmt.Sprintf("Submitted: service=%s protocol=%s server=%s user=%s token=%d bytes clear=%v lock=%v export=%d bytes. The form was reset.",
+					v.Text("service"), v.Text("protocol"), v.Text("host"), v.Text("user"), v.Secret("token").Len(),
+					v.Duration("clear"), v.Duration("lock"), v.Secret("export").Len())
 				v.Wipe()
 				form.Reset()
 			}
+			for _, k := range []string{"service", "host"} {
+				if form.OptionsChanged(k) {
+					status = fmt.Sprintf("Options of %s changed: %d now (an application would save them).", k, len(form.Options(k)))
+				}
+			}
 			if form.Canceled() {
-				status = "Canceled."
-				form.Reset()
+				status = "Canceled (an application would close the window; the example keeps the form)."
 			}
 
 			paint.Fill(gtx.Ops, th.Palette.Bg)

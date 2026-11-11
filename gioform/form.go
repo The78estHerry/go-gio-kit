@@ -3,7 +3,9 @@ package gioform
 import (
 	"image"
 	"image/color"
+	"slices"
 	"strings"
+	"time"
 
 	"gioui.org/io/key"
 	"gioui.org/layout"
@@ -18,38 +20,92 @@ const maskRune = '•'
 
 type fieldState struct {
 	Field
-	ed      widget.Editor
+	ed      widget.Editor // text fields, Combo, and a Duration being typed
 	confirm widget.Editor // NewSecret only
 	reveal  widget.Clickable
-	choice  widget.Enum // Choice only
+	choice  widget.Enum // Choice and Select: the chosen value
 	err     string
+
+	// Managing options (manage.go).
+	add, remove, undo widget.Clickable
+	addReq            bool
+	adding            bool // Select: typing a new option in ed
+	optsChanged       bool
+	confirming        string  // the value whose removal waits for a second click
+	removed           *Option // the last removed option, for Undo
+	removedAt         int
+	removedValue      bool // the removed option was the field's value
+
+	// Select and Combo.
+	box    widget.Clickable // Select: the closed field; Combo: the ▾ button
+	open   bool
+	filter bool // Combo: the list shows only options matching the text
+	hl     int  // highlighted row of the open list, -1 for none
+	items  []widget.Clickable
+	list   widget.List
+	closer bool   // event tag of the area outside an open list (a bool so its address is unique)
+	picked string // Combo: the text just picked, so its change event does not reopen the list
+
+	// Duration.
+	dur                  time.Duration
+	less, more, durBox   widget.Clickable
+	tip                  widget.Clickable
+	editing, editFocused bool
 }
 
 func (fs *fieldState) secret() bool { return fs.Type == Secret || fs.Type == NewSecret }
 
-// value is the field's current text, or the chosen value of a Choice.
+// value is the field's current text, the chosen value of a Choice or
+// Select, or a Duration in Go's form.
 func (fs *fieldState) value() string {
-	if fs.Type == Choice {
+	switch fs.Type {
+	case Choice, Select:
 		return fs.choice.Value
+	case Duration:
+		return fs.dur.String()
 	}
 	return fs.ed.Text()
 }
 
 // hasChoice reports whether v is one of the field's choices.
-func (fs *fieldState) hasChoice(v string) bool {
-	for _, c := range fs.Choices {
-		if c.Value == v {
-			return true
+func (fs *fieldState) hasChoice(v string) bool { return optionIndex(fs.Choices, v) >= 0 }
+
+// initial sets the field to its default value.
+func (fs *fieldState) initial() {
+	fs.ed.SetText("")
+	fs.confirm.SetText("")
+	fs.choice.Value = fs.Default
+	fs.err, fs.open, fs.editing, fs.picked = "", false, false, ""
+	fs.confirming, fs.removed, fs.adding = "", nil, false
+	switch fs.Type {
+	case Combo:
+		fs.ed.SetText(fs.Default)
+		fs.picked = fs.Default // not typed: do not open the list
+	case Duration:
+		d, err := ParseDuration(fs.Default)
+		if err != nil {
+			d = fs.Min
 		}
+		fs.dur = clampDuration(d, fs.Min, fs.Max)
 	}
-	return false
+}
+
+// focusTag is what gets the keyboard focus when the field is focused.
+func (fs *fieldState) focusTag() any {
+	switch fs.Type {
+	case Select:
+		return &fs.box
+	case Duration:
+		return &fs.durBox
+	}
+	return &fs.ed
 }
 
 // Form lays out a list of fields with OK and Cancel buttons.
 //
 // Tab and Shift+Tab move the focus (Gio does this in layout order), Enter in
-// any field submits, Esc cancels. Check Submitted and Canceled after each
-// Layout.
+// any text field submits, Esc cancels (or closes an open list first). Check
+// Submitted and Canceled after each Layout.
 type Form struct {
 	Theme  *Theme
 	Labels Labels
@@ -77,7 +133,16 @@ func New(th *Theme, fields []Field) *Form {
 			fs.ed.Mask = maskRune
 			fs.confirm.Mask = maskRune
 		}
-		fs.choice.Value = fd.Default
+		if fs.Type == Duration {
+			if fs.Max == 0 {
+				fs.Max = DefaultDurationMax
+			}
+			fs.Max = max(fs.Max, fs.Min)
+		}
+		fs.Choices = slices.Clone(fd.Choices) // Add and Remove change it
+		fs.items = make([]widget.Clickable, len(fd.Choices))
+		fs.list.Axis = layout.Vertical
+		fs.initial()
 		f.fields = append(f.fields, fs)
 	}
 	return f
@@ -92,28 +157,41 @@ func (f *Form) field(key string) *fieldState {
 	return nil
 }
 
-// SetText fills a text field, for example with saved settings, or selects
-// a Choice by value. It does nothing for secret fields.
+// SetText fills a text field, for example with saved settings, selects a
+// Choice or Select by value, or sets a Duration ("90s", see ParseDuration;
+// values out of range are clamped). It does nothing for secret fields.
 func (f *Form) SetText(key, value string) {
 	fs := f.field(key)
 	switch {
 	case fs == nil || fs.secret():
-	case fs.Type == Choice:
+	case fs.Type == Choice || fs.Type == Select:
 		if fs.hasChoice(value) {
 			fs.choice.Value = value
+		}
+	case fs.Type == Duration:
+		if d, err := ParseDuration(value); err == nil {
+			fs.dur = clampDuration(d, fs.Min, fs.Max)
 		}
 	default:
 		fs.ed.SetText(value)
 	}
 }
 
-// Choice returns the value currently chosen in a Choice field, so the
-// application can adapt the rest of the form while the user picks.
+// Choice returns the value currently chosen in a Choice or Select field,
+// so the application can adapt the rest of the form while the user picks.
 func (f *Form) Choice(key string) string {
-	if fs := f.field(key); fs != nil && fs.Type == Choice {
+	if fs := f.field(key); fs != nil && (fs.Type == Choice || fs.Type == Select) {
 		return fs.choice.Value
 	}
 	return ""
+}
+
+// Duration returns the current value of a Duration field.
+func (f *Form) Duration(key string) time.Duration {
+	if fs := f.field(key); fs != nil && fs.Type == Duration {
+		return fs.dur
+	}
+	return 0
 }
 
 // SetError shows msg under a field, for example when the service rejected
@@ -142,14 +220,11 @@ func (f *Form) Canceled() bool {
 	return c
 }
 
-// Reset clears every field, including secrets, and the error messages. The
-// first field gets the focus again on the next Layout.
+// Reset sets every field back to its default, clears secrets and error
+// messages. The first field gets the focus again on the next Layout.
 func (f *Form) Reset() {
 	for _, fs := range f.fields {
-		fs.ed.SetText("")
-		fs.confirm.SetText("")
-		fs.choice.Value = fs.Default
-		fs.err = ""
+		fs.initial()
 	}
 	f.values.Wipe()
 	f.submitted, f.canceled, f.values, f.focusedOnce = false, false, Values{}, false
@@ -163,8 +238,11 @@ func (f *Form) BlockedCopies() int { return f.blockedCopies }
 func (f *Form) validate() bool {
 	ok := true
 	for _, fs := range f.fields {
-		v := fs.value()
 		fs.err = ""
+		if fs.Type == Duration {
+			continue // always in range
+		}
+		v := fs.value()
 		switch {
 		case fs.Required && v == "":
 			fs.err = f.Labels.Required
@@ -186,11 +264,15 @@ func (f *Form) trySubmit() {
 	if !f.validate() {
 		return
 	}
-	v := Values{text: map[string]string{}, secret: map[string]*SecretValue{}}
+	v := Values{text: map[string]string{}, secret: map[string]*SecretValue{}, dur: map[string]time.Duration{}}
 	for _, fs := range f.fields {
-		if fs.secret() {
+		switch {
+		case fs.secret():
 			v.secret[fs.Key] = &SecretValue{b: []byte(fs.ed.Text())}
-		} else {
+		case fs.Type == Duration:
+			v.dur[fs.Key] = fs.dur
+			v.text[fs.Key] = fs.value()
+		default:
 			v.text[fs.Key] = fs.value()
 		}
 	}
@@ -219,6 +301,9 @@ func (f *Form) update(gtx layout.Context, fs *fieldState, ed *widget.Editor) (su
 	if fs.secret() {
 		f.blockCopy(gtx, ed)
 	}
+	if fs.Type == Combo && f.comboKeys(gtx, fs) {
+		submit = true
+	}
 	for {
 		ev, ok := ed.Update(gtx)
 		if !ok {
@@ -234,8 +319,12 @@ func (f *Form) update(gtx layout.Context, fs *fieldState, ed *widget.Editor) (su
 					ed.SetCaret(n, n)
 				}
 			}
+			if fs.Type == Combo {
+				fs.comboChanged()
+			}
 		case widget.SubmitEvent:
 			submit = true
+			fs.open = false
 		}
 	}
 }
@@ -243,31 +332,49 @@ func (f *Form) update(gtx layout.Context, fs *fieldState, ed *widget.Editor) (su
 // Layout draws the form and handles its input.
 func (f *Form) Layout(gtx layout.Context) layout.Dimensions {
 	if !f.focusedOnce && len(f.fields) > 0 {
-		gtx.Execute(key.FocusCmd{Tag: &f.fields[0].ed})
+		gtx.Execute(key.FocusCmd{Tag: f.fields[0].focusTag()})
 		f.focusedOnce = true
-	}
-	for {
-		if _, ok := gtx.Event(key.Filter{Name: key.NameEscape}); !ok {
-			break
-		}
-		f.canceled = true
 	}
 	submit := f.submitBtn.Clicked(gtx)
 	if f.cancelBtn.Clicked(gtx) {
 		f.canceled = true
 	}
 	for _, fs := range f.fields {
-		if fs.Type == Choice {
+		f.updateManage(gtx, fs)
+		switch fs.Type {
+		case Choice:
 			if fs.choice.Update(gtx) {
 				fs.err = ""
 			}
 			continue
+		case Select:
+			f.updateSelect(gtx, fs)
+			continue
+		case Duration:
+			f.updateDuration(gtx, fs)
+			continue
+		case Combo:
+			f.updateCombo(gtx, fs)
 		}
 		if f.update(gtx, fs, &fs.ed) {
 			submit = true
 		}
 		if fs.Type == NewSecret && f.update(gtx, fs, &fs.confirm) {
 			submit = true
+		}
+	}
+	// Key events go to the first gtx.Event call whose filter matches, so the
+	// form-wide Esc is read last: an open list or a time being typed takes
+	// its Esc first.
+	// Only the press counts: the release of an Esc that just closed a list
+	// arrives later and must not cancel the form.
+	for {
+		ev, ok := gtx.Event(key.Filter{Name: key.NameEscape})
+		if !ok {
+			break
+		}
+		if k, isKey := ev.(key.Event); isKey && k.State == key.Press {
+			f.canceled = true
 		}
 	}
 	if submit {
@@ -278,7 +385,6 @@ func (f *Form) Layout(gtx layout.Context) layout.Dimensions {
 	gap := layout.Spacer{Height: th.Spacing}
 	var children []layout.FlexChild
 	for _, fs := range f.fields {
-		fs := fs
 		children = append(children, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return f.layoutField(gtx, fs)
 		}), layout.Rigid(gap.Layout))
@@ -298,8 +404,32 @@ func (f *Form) layoutField(gtx layout.Context, fs *fieldState) layout.Dimensions
 	input := func(gtx layout.Context) layout.Dimensions {
 		return f.layoutBox(gtx, fs, &fs.ed, fs.Placeholder)
 	}
-	if fs.Type == Choice {
+	switch fs.Type {
+	case Choice:
 		input = func(gtx layout.Context) layout.Dimensions { return f.layoutChoices(gtx, fs) }
+	case Select:
+		input = func(gtx layout.Context) layout.Dimensions { return f.layoutSelect(gtx, fs) }
+	case Combo:
+		input = func(gtx layout.Context) layout.Dimensions { return f.layoutCombo(gtx, fs) }
+	case Duration:
+		input = func(gtx layout.Context) layout.Dimensions { return f.layoutDuration(gtx, fs) }
+	}
+	if fs.manages() {
+		field := input
+		input = func(gtx layout.Context) layout.Dimensions {
+			children := []layout.FlexChild{layout.Flexed(1, field)}
+			if fs.Add != "" {
+				children = append(children,
+					layout.Rigid(layout.Spacer{Width: th.Spacing / 2}.Layout),
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions { return f.layoutAdd(gtx, fs) }))
+			}
+			if fs.Remove != "" {
+				children = append(children,
+					layout.Rigid(layout.Spacer{Width: th.Spacing / 2}.Layout),
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions { return f.layoutRemove(gtx, fs) }))
+			}
+			return layout.Flex{Alignment: layout.Middle}.Layout(gtx, children...)
+		}
 	}
 	rows := []layout.FlexChild{
 		layout.Rigid(label(fs.Label, th.Palette.Fg)),
@@ -333,6 +463,11 @@ func (f *Form) layoutField(gtx layout.Context, fs *fieldState) layout.Dimensions
 	if msg != "" {
 		caption(msg, c)
 	}
+	if fs.removed != nil {
+		rows = append(rows, layout.Rigid(small.Layout), layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			return f.layoutUndo(gtx, fs)
+		}))
+	}
 	if fs.Type == NewSecret && fs.err == "" {
 		switch confirmState(fs.ed.Text(), fs.confirm.Text()) {
 		case confirmMismatch:
@@ -342,6 +477,38 @@ func (f *Form) layoutField(gtx layout.Context, fs *fieldState) layout.Dimensions
 		}
 	}
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx, rows...)
+}
+
+// fieldBorder returns the border of a field box.
+func (f *Form) fieldBorder(fs *fieldState, focused bool) widget.Border {
+	th := f.Theme
+	c, w := th.Palette.Border, unit.Dp(1)
+	if focused {
+		c, w = th.Palette.Accent, unit.Dp(2)
+	}
+	if fs.err != "" {
+		c = th.Palette.Error
+	}
+	return widget.Border{Color: c, CornerRadius: th.Radius, Width: w}
+}
+
+// surface fills the area of a field box.
+func (f *Form) surface(gtx layout.Context) layout.Dimensions {
+	r := gtx.Dp(f.Theme.Radius)
+	defer clip.UniformRRect(image.Rectangle{Max: gtx.Constraints.Min}, r).Push(gtx.Ops).Pop()
+	paint.Fill(gtx.Ops, f.Theme.Palette.Surface)
+	return layout.Dimensions{Size: gtx.Constraints.Min}
+}
+
+// editor draws ed with the theme colors.
+func (f *Form) editor(gtx layout.Context, ed *widget.Editor, hint string) layout.Dimensions {
+	th := f.Theme
+	es := material.Editor(th.Material, ed, hint)
+	es.Color, es.HintColor = th.Palette.Fg, th.Palette.Muted
+	sel := th.Palette.Accent
+	sel.A = 0x60
+	es.SelectionColor = sel
+	return es.Layout(gtx)
 }
 
 // layoutBox draws one editor in a rounded box; secret fields get a button
@@ -355,48 +522,25 @@ func (f *Form) layoutBox(gtx layout.Context, fs *fieldState, ed *widget.Editor, 
 			fs.ed.Mask, fs.confirm.Mask = maskRune, maskRune
 		}
 	}
-	borderColor, borderWidth := th.Palette.Border, unit.Dp(1)
-	if gtx.Focused(ed) {
-		borderColor, borderWidth = th.Palette.Accent, unit.Dp(2)
-	}
-	if fs.err != "" {
-		borderColor = th.Palette.Error
-	}
-	border := widget.Border{Color: borderColor, CornerRadius: th.Radius, Width: borderWidth}
-	return border.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		return layout.Background{}.Layout(gtx,
-			func(gtx layout.Context) layout.Dimensions {
-				r := gtx.Dp(th.Radius)
-				defer clip.UniformRRect(image.Rectangle{Max: gtx.Constraints.Min}, r).Push(gtx.Ops).Pop()
-				paint.Fill(gtx.Ops, th.Palette.Surface)
-				return layout.Dimensions{Size: gtx.Constraints.Min}
-			},
-			func(gtx layout.Context) layout.Dimensions {
-				return layout.Inset{Top: 8, Bottom: 8, Left: 10, Right: 6}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-					editor := func(gtx layout.Context) layout.Dimensions {
-						es := material.Editor(th.Material, ed, hint)
-						es.Color, es.HintColor = th.Palette.Fg, th.Palette.Muted
-						sel := th.Palette.Accent
-						sel.A = 0x60
-						es.SelectionColor = sel
-						return es.Layout(gtx)
-					}
-					if !fs.secret() || ed != &fs.ed {
-						return editor(gtx)
-					}
-					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-						layout.Flexed(1, editor),
-						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-							b := material.Button(th.Material, &fs.reveal, f.Labels.Show)
-							b.Background, b.Color = th.Palette.Surface, th.Palette.Muted
-							b.TextSize = th.Material.TextSize * 0.85
-							b.Inset = layout.Inset{Top: 2, Bottom: 2, Left: 8, Right: 8}
-							return b.Layout(gtx)
-						}),
-					)
-				})
-			},
-		)
+	return f.fieldBorder(fs, gtx.Focused(ed)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		return layout.Background{}.Layout(gtx, f.surface, func(gtx layout.Context) layout.Dimensions {
+			return layout.Inset{Top: 8, Bottom: 8, Left: 10, Right: 6}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				editor := func(gtx layout.Context) layout.Dimensions { return f.editor(gtx, ed, hint) }
+				if !fs.secret() || ed != &fs.ed {
+					return editor(gtx)
+				}
+				return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+					layout.Flexed(1, editor),
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						b := material.Button(th.Material, &fs.reveal, f.Labels.Show)
+						b.Background, b.Color = th.Palette.Surface, th.Palette.Muted
+						b.TextSize = th.Material.TextSize * 0.85
+						b.Inset = layout.Inset{Top: 2, Bottom: 2, Left: 8, Right: 8}
+						return b.Layout(gtx)
+					}),
+				)
+			})
+		})
 	})
 }
 

@@ -16,7 +16,7 @@
 
 | 套件 | 用途 | 狀態 |
 |---|---|---|
-| `gioform` | 表單：一般文字欄、Secret 欄（Token、密碼）、NewSecret 欄（設定新密碼，含確認欄與強度提示）、Choice 欄（單選按鈕，main 開發中）、驗證、深淺色主題 | v0.1.0 |
+| `gioform` | 表單：一般文字欄、Secret 欄（Token、密碼）、NewSecret 欄（設定新密碼，含確認欄與強度提示）、Choice 欄（單選按鈕）、Select 欄（下拉選單）、Combo 欄（可輸入的下拉）、Duration 欄（時間）、選項的新增與刪除（main 開發中）、驗證、深淺色主題 | v0.1.0 |
 | `giowin` | 視窗修正：Windows 日文輸入法、深色標題列、讀取系統的深淺色設定、desktop/userauth 驗證畫面的擁有者視窗（`AuthWindow`，main 開發中） | v0.1.0 |
 | `giowidget` | 桌面小工具視窗：無邊框、可固定最上層、拖曳背景移動、不出現在工作列；記住位置、移到游標旁，所在螢幕被拔掉時暫時移到主螢幕、接回後移回原位 | v0.2.0 |
 
@@ -64,6 +64,13 @@ go run ./gioform/example
 ```
 
 介面文字預設是英文，替換 `form.Labels`（型別 `gioform.Labels`）就能翻譯。
+
+### 選擇與時間欄位（main 開發中）
+
+- **Select**：下拉選單，選項多時可捲動。焦點在欄位上時，上下鍵直接換選擇；Enter／空白鍵展開清單，Esc 只收起清單、不取消表單。
+- **Combo**：可輸入的下拉。打字會篩選選項，按下鍵展開清單，也接受清單以外的文字。
+- **Duration**：`◀ 5 min ▶` 在常用值之間跳；點數值可直接輸入 `90`（分鐘）、`10s`、`3m`、`2:30`、`1m30s`。可設定 `Min`、`Max`，超出範圍時提示；輸入格式說明收在「?」裡。`ParseDuration` 與 `FormatDuration` 也可以單獨使用。
+- **新增與刪除選項**：設定 `Field.Add`、`Field.Remove` 就會出現按鈕。Combo 的「＋」加入打的字；Select 的「＋」把欄位變成輸入框，按 Enter 加入（`AddExternal` 則改由 App 處理）。`Option.Fixed` 的選項永遠不能刪，`Field.CanRemove` 讓 App 依條件決定；不能刪時按鈕整顆變淡，滑鼠停在上面顯示警告圖示與原因（圖示可在 `Theme.Icons` 替換）。刪除前要不要確認（`ConfirmRemove`）、能不能復原（`UndoRemove`）由開發者決定。`Form.OptionsChanged` 回報變更，讓 App 儲存。
 
 ## 安全設計
 
