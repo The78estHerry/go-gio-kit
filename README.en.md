@@ -18,8 +18,8 @@ Packages that do not depend on a GUI (OS credential store, encrypted files, conf
 
 | Package | Purpose | Status |
 |---|---|---|
-| `gioform` | Forms: plain text fields, Secret fields (tokens, passwords), NewSecret fields (setting a new password, with confirmation and strength hint), Choice fields (radio buttons), Select fields (drop-down lists), Combo fields (drop-downs you can type in), Duration fields (times), adding and removing options (in development on main), validation, dark and light themes | v0.1.0 |
-| `giowin` | Window fixes: Japanese IME on Windows, dark title bar, reading the OS color scheme, the owner window for desktop/userauth prompts (`AuthWindow`; in development on main) | v0.1.0 |
+| `gioform` | Forms: plain text fields, Secret fields (tokens, passwords), NewSecret fields (setting a new password, with confirmation and strength hint), Choice fields (radio buttons), Select fields (drop-down lists), Combo fields (drop-downs you can type in), Duration fields (times), adding and removing options, validation, dark and light themes | v0.3.0 |
+| `giowin` | Window fixes: Japanese IME on Windows, dark title bar, reading the OS color scheme, the owner window for desktop/userauth prompts (`AuthWindow`) | v0.3.0 |
 | `giowidget` | Desktop widget window: borderless, optionally on top, dragged by its background, kept out of the taskbar; remembers its position, jumps next to the pointer, moves to the primary monitor while its monitor is unplugged and back afterwards | v0.2.0 |
 
 ## Install
@@ -67,7 +67,7 @@ go run ./gioform/example
 
 The UI text is English by default; replace `form.Labels` (type `gioform.Labels`) to translate it.
 
-### Choice and time fields (in development on main)
+### Choice and time fields
 
 - **Select**: a drop-down list that scrolls when long. With the focus on the field, Up and Down change the choice; Enter or Space opens the list, and Esc only closes it without canceling the form.
 - **Combo**: a drop-down you can type in. Typing filters the options, Down opens the list, and text that is not in the list is accepted too.
