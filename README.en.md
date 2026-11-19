@@ -18,7 +18,7 @@ Packages that do not depend on a GUI (OS credential store, encrypted files, conf
 
 | Package | Purpose | Status |
 |---|---|---|
-| `gioform` | Forms: plain text fields, Secret fields (tokens, passwords), NewSecret fields (setting a new password, with confirmation and strength hint), Choice fields (radio buttons), Select fields (drop-down lists), Combo fields (drop-downs you can type in), Duration fields (times), adding and removing options, validation, dark and light themes | v0.3.0 |
+| `gioform` | Forms: plain text fields, Secret fields (tokens, passwords), NewSecret fields (setting a new password, with confirmation and strength hint), Choice fields (radio buttons), Select fields (drop-down lists), Combo fields (drop-downs you can type in), Duration fields (times), adding and removing options, validation, dark and light themes | v0.4.0 |
 | `giowin` | Window fixes: Japanese IME on Windows, dark title bar, reading the OS color scheme, the owner window for desktop/userauth prompts (`AuthWindow`) | v0.3.0 |
 | `giowidget` | Desktop widget window: borderless, optionally on top, dragged by its background, kept out of the taskbar; remembers its position, jumps next to the pointer, moves to the primary monitor while its monitor is unplugged and back afterwards | v0.2.0 |
 
