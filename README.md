@@ -71,6 +71,7 @@ go run ./gioform/example
 - **Combo**：可輸入的下拉。打字會篩選選項，按下鍵展開清單，也接受清單以外的文字。
 - **Duration**：`◀ 5 min ▶` 在常用值之間跳；點數值可直接輸入 `90`（分鐘）、`10s`、`3m`、`2:30`、`1m30s`。可設定 `Min`、`Max`，超出範圍時提示；輸入格式說明收在「?」裡。`ParseDuration` 與 `FormatDuration` 也可以單獨使用。
 - **新增與刪除選項**：設定 `Field.Add`、`Field.Remove` 就會出現按鈕。Combo 的「＋」加入打的字；Select 的「＋」把欄位變成輸入框，按 Enter 加入（`AddExternal` 則改由 App 處理）。`Option.Fixed` 的選項永遠不能刪，`Field.CanRemove` 讓 App 依條件決定；不能刪時按鈕整顆變淡，滑鼠停在上面顯示警告圖示與原因（圖示可在 `Theme.Icons` 替換）。刪除前要不要確認（`ConfirmRemove`）、能不能復原（`UndoRemove`）由開發者決定。`Form.OptionsChanged` 回報變更，讓 App 儲存。
+- **停用欄位**：`Form.SetDisabled(key, 原因)` 讓欄位整顆變淡、不能聚焦也不能輸入，輸入框裡直接顯示警告圖示與原因（再呼叫一次可更新，例如倒數）；有欄位停用時表單送不出去，送出鈕也變淡並在滑鼠停留時顯示原因。原因傳空字串就恢復，`Form.Focus(key)` 可把游標移回該欄。
 
 ## 安全設計
 

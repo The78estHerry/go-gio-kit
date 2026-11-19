@@ -256,21 +256,7 @@ func (f *Form) layoutRemove(gtx layout.Context, fs *fieldState) layout.Dimension
 	}
 	dims := f.smallButton(gtx, &fs.remove, label, ok && !fs.adding, col)
 	if !ok && reason != "" && (fs.remove.Hovered() || gtx.Focused(&fs.remove)) {
-		f.layoutFloat(gtx, func(gtx layout.Context) layout.Dimensions {
-			return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					if th.Icons.Warning == nil {
-						return layout.Dimensions{}
-					}
-					return layout.Inset{Right: unit.Dp(6)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-						return th.Icons.Warning(gtx, unit.Dp(18), th.Palette.Warning)
-					})
-				}),
-				layout.Flexed(1, f.caption(reason, th.Palette.Fg)),
-			)
-		}, func(size image.Point) image.Point {
-			return image.Pt(dims.Size.X-size.X, dims.Size.Y+gtx.Dp(4)) // right-aligned under the button
-		})
+		f.warnTip(gtx, reason, dims) // right-aligned under the button
 	}
 	return dims
 }

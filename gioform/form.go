@@ -26,6 +26,8 @@ type fieldState struct {
 	choice  widget.Enum // Choice and Select: the chosen value
 	err     string
 
+	disabled string // why the field is disabled (disabled.go), "" when enabled
+
 	// Managing options (manage.go).
 	add, remove, undo widget.Clickable
 	addReq            bool
@@ -112,8 +114,10 @@ type Form struct {
 
 	fields        []*fieldState
 	submitBtn     widget.Clickable
+	submitTip     widget.Clickable // hover of the faded submit button (disabled.go)
 	cancelBtn     widget.Clickable
 	focusedOnce   bool
+	focusKey      string // a field to focus in the next Layout (Focus)
 	submitted     bool
 	canceled      bool
 	values        Values
@@ -331,15 +335,30 @@ func (f *Form) update(gtx layout.Context, fs *fieldState, ed *widget.Editor) (su
 
 // Layout draws the form and handles its input.
 func (f *Form) Layout(gtx layout.Context) layout.Dimensions {
-	if !f.focusedOnce && len(f.fields) > 0 {
-		gtx.Execute(key.FocusCmd{Tag: f.fields[0].focusTag()})
+	if !f.focusedOnce {
+		for _, fs := range f.fields {
+			if fs.disabled == "" {
+				gtx.Execute(key.FocusCmd{Tag: fs.focusTag()})
+				break
+			}
+		}
 		f.focusedOnce = true
+	}
+	if f.focusKey != "" {
+		if fs := f.field(f.focusKey); fs != nil && fs.disabled == "" {
+			gtx.Execute(key.FocusCmd{Tag: fs.focusTag()})
+		}
+		f.focusKey = ""
 	}
 	submit := f.submitBtn.Clicked(gtx)
 	if f.cancelBtn.Clicked(gtx) {
 		f.canceled = true
 	}
 	for _, fs := range f.fields {
+		if fs.disabled != "" {
+			f.releaseFocus(gtx, fs)
+			continue
+		}
 		f.updateManage(gtx, fs)
 		switch fs.Type {
 		case Choice:
@@ -377,7 +396,7 @@ func (f *Form) Layout(gtx layout.Context) layout.Dimensions {
 			f.canceled = true
 		}
 	}
-	if submit {
+	if submit && f.disabledReason() == "" {
 		f.trySubmit()
 	}
 
@@ -394,6 +413,9 @@ func (f *Form) Layout(gtx layout.Context) layout.Dimensions {
 }
 
 func (f *Form) layoutField(gtx layout.Context, fs *fieldState) layout.Dimensions {
+	if fs.disabled != "" {
+		return f.layoutDisabledField(gtx, fs)
+	}
 	th := f.Theme
 	label := func(text string, c color.NRGBA) layout.Widget {
 		l := material.Body2(th.Material, text)
@@ -553,7 +575,7 @@ func (f *Form) layoutButtons(gtx layout.Context) layout.Dimensions {
 			return b.Layout(gtx)
 		}),
 		layout.Rigid(layout.Spacer{Width: th.Spacing}.Layout),
-		layout.Rigid(material.Button(th.Material, &f.submitBtn, f.Labels.Submit).Layout),
+		layout.Rigid(f.layoutSubmit),
 	)
 }
 
