@@ -40,6 +40,10 @@ type Option struct {
 	// Fixed options are built in and can never be removed (see
 	// Field.Remove).
 	Fixed bool
+	// Icon, if set, is drawn before the label in a Select field and in the
+	// lists of Select and Combo fields, with the color of the text. It may
+	// use colors of its own, such as a brand color.
+	Icon Icon
 }
 
 // Field describes one input of a form.

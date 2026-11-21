@@ -56,3 +56,4 @@ Gio に依存する再利用可能なパッケージ：`gioform`（TextField、S
 - 2026-11-11：**v0.3.0 をリリース**（gioform の Select、Combo、Duration、選択肢の追加／削除、giowin の `AuthWindow`）：main とタグの CI（GitHub 3 プラットフォーム、Gitea）成功、両方に Release、module proxy で取得可。credential-porter は v0.3.0 を使用。
 - 2026-11-19：gioform に `Form.SetDisabled`／`Disabled`／`Focus` を追加（無効な欄は全体が薄くなり、フォーカスも入力も受け付けず、欄の中に ⚠ と理由を表示。無効な欄がある間は送信できず、送信ボタンも薄くなりマウスを乗せると理由を表示）。単体テストあり（`input.Router` で Enter を送って確認）。credential-porter の App PIN ロック画面は実機テスト済み。未リリース（credential-porter は go.work でローカルを参照）。
 - 2026-11-20：**v0.4.0 をリリース**（gioform の欄の無効化 `SetDisabled`／`Disabled`／`Focus`）：main とタグの CI（GitHub 3 プラットフォーム、Gitea）成功、両方に Release、module proxy で取得可。credential-porter は v0.4.0 を使用。
+- 2026-11-21（一時停止）：gioform に `Option.Icon` を追加（`Icon` 型。Select 欄と Select／Combo の一覧でラベルの前に描く。文字色を受け取り、独自のブランド色も可）。単体テストあり、**実機ではまだ見ていない**（credential-porter の追加ページで GitHub、Gitea のアイコンに使用）。未リリース。

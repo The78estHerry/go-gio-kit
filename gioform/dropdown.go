@@ -268,12 +268,12 @@ func (f *Form) layoutSelect(gtx layout.Context, fs *fieldState) layout.Dimension
 			return layout.Background{}.Layout(gtx, f.surface, func(gtx layout.Context) layout.Dimensions {
 				return layout.Inset{Top: 8, Bottom: 8, Left: 10, Right: 10}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
-					text, c := f.Labels.SelectNone, th.Palette.Muted
+					shown := f.label(f.Labels.SelectNone, th.Palette.Muted)
 					if i := fs.current(); i >= 0 {
-						text, c = fs.Choices[i].Label, th.Palette.Fg
+						shown = f.optionLabel(fs.Choices[i], th.Palette.Fg)
 					}
 					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-						layout.Flexed(1, f.label(text, c)),
+						layout.Flexed(1, shown),
 						layout.Rigid(f.label("▾", th.Palette.Muted)),
 					)
 				})
@@ -348,7 +348,7 @@ func (f *Form) layoutList(gtx layout.Context, fs *fieldState, field image.Point)
 							if oi == fs.current() {
 								c = th.Palette.Accent
 							}
-							return layout.Inset{Top: 6, Bottom: 6, Left: 10, Right: 10}.Layout(gtx, f.label(fs.Choices[oi].Label, c))
+							return layout.Inset{Top: 6, Bottom: 6, Left: 10, Right: 10}.Layout(gtx, f.optionLabel(fs.Choices[oi], c))
 						},
 					)
 				})
@@ -363,6 +363,23 @@ func (f *Form) label(text string, c color.NRGBA) layout.Widget {
 	l := material.Body1(f.Theme.Material, text)
 	l.Color = c
 	return l.Layout
+}
+
+// optionLabel draws an option's label, after its icon if it has one.
+func (f *Form) optionLabel(o Option, c color.NRGBA) layout.Widget {
+	if o.Icon == nil {
+		return f.label(o.Label, c)
+	}
+	return func(gtx layout.Context) layout.Dimensions {
+		return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				return layout.Inset{Right: unit.Dp(8)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+					return o.Icon(gtx, unit.Dp(20), c)
+				})
+			}),
+			layout.Flexed(1, f.label(o.Label, c)),
+		)
+	}
 }
 
 // textButton draws a small flat button showing text, such as ▾ or ◀.

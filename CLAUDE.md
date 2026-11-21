@@ -56,3 +56,4 @@
 - 2026-11-11：**v0.3.0 已發佈**（gioform 的 Select、Combo、Duration、選項新增／刪除；giowin 的 `AuthWindow`）：main 與 tag 的 CI（GitHub 三平台、Gitea）都通過，兩邊都有 Release，module proxy 可取得。credential-porter 已改用 v0.3.0。
 - 2026-11-19：gioform 新增 `Form.SetDisabled`／`Disabled`／`Focus`（停用欄位：整顆變淡、不能聚焦與輸入、框裡顯示 ⚠ 原因；有欄位停用時不能送出，送出鈕變淡並在滑鼠停留時顯示原因），有單元測試（用 `input.Router` 送 Enter 確認）。credential-porter 的 App PIN 鎖住畫面實機測試通過。尚未發版（credential-porter 目前用 go.work 指向本機）。
 - 2026-11-20：**v0.4.0 已發佈**（gioform 的停用欄位 `SetDisabled`／`Disabled`／`Focus`）：main 與 tag 的 CI（GitHub 三平台、Gitea）都通過，兩邊都有 Release，module proxy 可取得。credential-porter 已改用 v0.4.0。
+- 2026-11-21（暫停點）：gioform 新增 `Option.Icon`（`Icon` 型別，畫在 Select 欄與 Select／Combo 清單的標籤前，顏色用文字色，也可用自己的品牌色），有單元測試，**尚未實機看過**（credential-porter 的新增頁用它顯示 GitHub、Gitea 圖示）。未發版。
